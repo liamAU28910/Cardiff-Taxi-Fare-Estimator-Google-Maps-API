@@ -88,3 +88,75 @@ def get_user_inputs():
             print("Please try again.")
 
     return start_location, end_location, departure_datetime, passenger_num, large_items_num
+
+
+def price_calculation(start_location, end_location, departure_datetime, passenger_num, large_items_num, base_rate,
+                      base_dist, add_dist, add_rate, time_per_charge, time_rate, extra_passenger_rate,
+                      free_passenger_num, sunday_or_post_midnight_charge, luggage_rate):
+    """
+    Calculates and returns the total cost of the journey.
+    :param start_location: The starting/pickup location of the journey.
+    :type start_location: str
+    :param end_location: The location of the destination of the journey.
+    :type end_location: str
+    :param departure_datetime: The date and time of the taxi's departure.
+    :type departure_datetime: datetime
+    :param passenger_num: The number of passengers travelling in the taxi. Does not include the driver.
+    :type passenger_num: int
+    :param large_items_num: The number of large luggage items accompanying the passengers.
+    :type large_items_num: int
+    :param base_rate: The base rate for the minimum distance
+    :type base_rate: float
+    :param base_dist: The minimum distance in metres
+    :type base_dist: float
+    :param add_dist: The distance between each additional distance-charge.
+    :type add_dist: float
+    :param add_rate: The rate per additional distance-charge.
+    :type add_rate: float
+    :param time_per_charge: The time between each time-charge in seconds.
+    :type time_per_charge: int
+    :param time_rate: The rate per time-charge in seconds.
+    :type time_rate: float
+    :param free_passenger_num: The number of passenger who do not result in an additional charge.
+    :type free_passenger_num: int
+    :param extra_passenger_rate: The additional charge per passenger over the free passenger limit.
+    :type extra_passenger_rate: float
+    :param sunday_or_post_midnight_charge: The additional charge for travel on a Sunday or after midnight.
+    :type sunday_or_post_midnight_charge: float
+    :param luggage_rate: The charge for each piece of large luggage.
+    :type luggage_rate: float
+    :return: The estimated total cost of the journey (£.p) and the estimated journey time (seconds).
+    :rtype: (float, int)
+    """
+
+    directions_result = gmaps.directions(start_location, end_location, departure_time=departure_datetime)
+    distance = directions_result[0]['legs'][0]['distance']['value']
+    time_taken = directions_result[0]['legs'][0]['duration']['value']
+
+    if departure_datetime.time() < datetime.strptime('6', '%H').time():
+        is_post_midnight = True
+    else:
+        is_post_midnight = False
+    if departure_datetime.weekday() == 6:
+        is_sunday = True
+    else:
+        is_sunday = False
+
+    # Price for distance:
+    if distance > base_dist:
+        distance_price = ((distance - base_dist) / add_dist) * add_rate + base_rate
+    else:
+        distance_price = base_rate
+    # Price for time:
+    time_price = (time_taken / time_per_charge) * time_rate
+    # Price for extras:
+    extra_price = 0
+    if passenger_num > free_passenger_num:
+        extra_price += (passenger_num - free_passenger_num) * extra_passenger_rate
+    if is_sunday or is_post_midnight:
+        extra_price += sunday_or_post_midnight_charge
+    extra_price += large_items_num * luggage_rate
+
+    total = round((distance_price + time_price + extra_price), 2)
+
+    return total, time_taken
