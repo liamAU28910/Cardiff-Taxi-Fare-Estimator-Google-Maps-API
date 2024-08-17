@@ -160,3 +160,17 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     total = round((distance_price + time_price + extra_price), 2)
 
     return total, time_taken
+
+
+def main():
+    start_location, end_location, departure_datetime, passenger_num, large_items_num = get_user_inputs()
+    total_price, journey_time = price_calculation(start_location, end_location, departure_datetime, passenger_num,
+                                                  large_items_num, 2.5, 94.18, 178.3, 0.2, 48, 0.2, 1, 4, 1, 0.5)
+
+    print("\nYour journey should take ", int(journey_time / 60), " Minutes.")
+    print("Your total fare should be: £", total_price)
+    print("Warning! Fares may be higher on and around christmas and new year. A £50 levy may be charged for fouling of the vehicle.")
+    print("Fares accurate: November 2020")
+
+if __name__ == '__main__':
+    main()
