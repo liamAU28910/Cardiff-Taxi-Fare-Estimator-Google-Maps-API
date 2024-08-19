@@ -169,7 +169,7 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
 def main():
     start_location, end_location, departure_datetime, passenger_num, large_items_num = get_user_inputs()
     total_price, journey_time = price_calculation(start_location, end_location, departure_datetime, passenger_num,
-                                                  large_items_num, 2.5, 94.18, 178.3, 0.2, 48, 0.2, 1, 4, 1, 0.5)
+                                                  large_items_num, 3.5, 228.6, 155.88, 0.2, 40, 0.3, 1, 4, 1, 0.5)
 
     print("\nYour journey should take ", int(journey_time / 60), " Minutes.")
     print("Your total fare should be: £", total_price)
