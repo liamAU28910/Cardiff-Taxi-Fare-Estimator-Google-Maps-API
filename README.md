@@ -1,12 +1,18 @@
-# Taxi-Price-Estimator-Google-Maps-API
+# Cardiff-Taxi-Price-Estimator-Google-Maps-API
 ## About
-Outdated. Uses fare data from 2020. Not compatible with updated fare rates due to new fares using wait-time instead of time generally. You would need to know time spend under 8mph to calculate the new fares which cannot easily be established from google directions.
-A text-based tool which estimates the final fare of a taxi journey within the Cardiff area. 
+### Tariffs accurate as of 19/08/2024
+
+A tool which estimates the final fare of a taxi journey within the Cardiff area. 
+Using the date and time, the appropriate tariff is determined from those provided by cardiff council found [here](https://www.cardiff.gov.uk/ENG/resident/Parking-roads-and-travel/travel/taxis/taxi-passengers/hackney-carriage/Pages/default.aspx)
+The start location and destination are used to find the distance and sections of the journey with an average speed of under 8mph (considered stopped for fare purposes) using the google maps API through the googlemaps library.
+
 ## Features
-- Uses both distance and time to calculate the fare.
+- Uses both distance and stopped time to calculate the fare.
 - Has options for both immediate and future journeys.
 - Factors in extra charges due to day of the week and time.
-- Factors in extra charges due to number of passengers and luggage.
+- Factors in extra charges and a change of fare due to bank holidays and days specified by Cardiff Council.
+- Factors in extra charges due to number of passengers.
+
 ## How to use
 ### Acquiring your Google API Key
 Due to the use of the Google Maps API, you will require an API key. API keys are generated in the 'Credentials' page of the 'APIs & Services' tab of [Google Cloud console](https://console.cloud.google.com/apis/credentials).
