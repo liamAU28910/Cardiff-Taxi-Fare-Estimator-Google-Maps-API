@@ -132,6 +132,10 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     directions_result = gmaps.directions(start_location, end_location, departure_time=departure_datetime)
     distance = directions_result[0]['legs'][0]['distance']['value']
     time_taken = directions_result[0]['legs'][0]['duration']['value']
+    time_under_8_mph = 0
+    for step in directions_result[0]['legs'][0]['steps']:
+        if (step['distance']['value']/step['duration']['value']) < 3.57632:
+            time_under_8_mph += step['duration']['value']
 
     if departure_datetime.time() < datetime.strptime('6', '%H').time():
         is_post_midnight = True
@@ -148,7 +152,7 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     else:
         distance_price = base_rate
     # Price for time:
-    time_price = (time_taken / time_per_charge) * time_rate
+    time_price = (time_under_8_mph / time_per_charge) * time_rate
     # Price for extras:
     extra_price = 0
     if passenger_num > free_passenger_num:
