@@ -1,1 +1,1 @@
-#api_key = 'INSERT GOOGLE API KEY HERE'
+api_key = 'INSERT GOOGLE API KEY HERE'
