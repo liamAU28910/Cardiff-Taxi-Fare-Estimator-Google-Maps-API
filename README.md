@@ -1,3 +1,4 @@
+# Cardiff-Taxi-Price-Estimator-Google-Maps-API
 ## About
 ### Tariffs accurate as of 19/08/2024
 
@@ -11,6 +12,7 @@ The start location and destination are used to find the distance and sections of
 - Factors in extra charges due to day of the week and time.
 - Factors in extra charges and a change of fare due to bank holidays and days specified by Cardiff Council.
 - Factors in extra charges due to number of passengers.
+
 ## How to use
 ### Acquiring your Google API Key
 Due to the use of the Google Maps API, you will require an API key. API keys are generated in the 'Credentials' page of the 'APIs & Services' tab of [Google Cloud console](https://console.cloud.google.com/apis/credentials).
