@@ -1,1 +1,2 @@
 googlemaps==4.10.0
+govuk_bank_holidays==0.14

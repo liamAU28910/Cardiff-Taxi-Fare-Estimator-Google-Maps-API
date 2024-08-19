@@ -1,6 +1,8 @@
 import config
 import googlemaps
-from datetime import datetime
+from datetime import datetime, time
+from govuk_bank_holidays.bank_holidays import BankHolidays
+
 
 gmaps = googlemaps.Client(key=config.api_key)
 
@@ -8,14 +10,9 @@ gmaps = googlemaps.Client(key=config.api_key)
 def get_user_inputs():
     """
     Prompts the user to provide the information required to calculate their taxi fare.
-    They are prompted for the: start location; destination; time of travel; number of passengers;
-    and quantity of luggage.
-    :return:
-        str: The starting location.
-        str: The destination.
-        datetime: The date and time of departure.
-        int: The number of passengers travelling.
-        int: The number of large luggage items accompanying the passengers.
+    They are prompted for the: start location; destination; time of travel; and number of passengers.
+    :return: Implied tuple of: The starting location, destination, datetime of departure and the number of passengers travelling.
+    :rtype: (str, str, datetime, int)
     """
     gc = []
     while not gc:
@@ -76,23 +73,12 @@ def get_user_inputs():
             valid_input_3 = False
             print("Please try again.")
 
-    valid_input_4 = False
-    while not valid_input_4:
-        try:
-            large_items_num = int(
-                input("Input the number of Bicycles, Cabin Trunks and items of furniture you are bringing : "))
-            valid_input_4 = True
-        except Exception as e:
-            print(e)
-            valid_input_4 = False
-            print("Please try again.")
-
-    return start_location, end_location, departure_datetime, passenger_num, large_items_num
+    return start_location, end_location, departure_datetime, passenger_num
 
 
-def price_calculation(start_location, end_location, departure_datetime, passenger_num, large_items_num, base_rate,
+def price_calculation(start_location, end_location, departure_datetime, passenger_num, base_rate,
                       base_dist, add_dist, add_rate, time_per_charge, time_rate, extra_passenger_rate,
-                      free_passenger_num, sunday_or_post_midnight_charge, luggage_rate):
+                      free_passenger_num):
     """
     Calculates and returns the total cost of the journey.
     :param start_location: The starting/pickup location of the journey.
@@ -103,8 +89,6 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     :type departure_datetime: datetime
     :param passenger_num: The number of passengers travelling in the taxi. Does not include the driver.
     :type passenger_num: int
-    :param large_items_num: The number of large luggage items accompanying the passengers.
-    :type large_items_num: int
     :param base_rate: The base rate for the minimum distance
     :type base_rate: float
     :param base_dist: The minimum distance in metres
@@ -121,10 +105,6 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     :type free_passenger_num: int
     :param extra_passenger_rate: The additional charge per passenger over the free passenger limit.
     :type extra_passenger_rate: float
-    :param sunday_or_post_midnight_charge: The additional charge for travel on a Sunday or after midnight.
-    :type sunday_or_post_midnight_charge: float
-    :param luggage_rate: The charge for each piece of large luggage.
-    :type luggage_rate: float
     :return: The estimated total cost of the journey (£.p) and the estimated journey time (seconds).
     :rtype: (float, int)
     """
@@ -137,15 +117,6 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
         if (step['distance']['value']/step['duration']['value']) < 3.57632:
             time_under_8_mph += step['duration']['value']
 
-    if departure_datetime.time() < datetime.strptime('6', '%H').time():
-        is_post_midnight = True
-    else:
-        is_post_midnight = False
-    if departure_datetime.weekday() == 6:
-        is_sunday = True
-    else:
-        is_sunday = False
-
     # Price for distance:
     if distance > base_dist:
         distance_price = ((distance - base_dist) / add_dist) * add_rate + base_rate
@@ -157,24 +128,73 @@ def price_calculation(start_location, end_location, departure_datetime, passenge
     extra_price = 0
     if passenger_num > free_passenger_num:
         extra_price += (passenger_num - free_passenger_num) * extra_passenger_rate
-    if is_sunday or is_post_midnight:
-        extra_price += sunday_or_post_midnight_charge
-    extra_price += large_items_num * luggage_rate
+    daymonth = (departure_datetime.day, departure_datetime.month)
+    extra_fare_days = [(1, 1), (24, 12), (25, 12), (26, 12), (31, 12)]
+    if daymonth in extra_fare_days:
+        extra_price += 3
 
     total = round((distance_price + time_price + extra_price), 2)
+    print("Distance Cost: £" + str(round(distance_price, 2)))
+    print("Stopped Time Cost: £" + str(round(time_price, 2)))
+    print("Extra Charges: £" + str(round(float(extra_price), 2)))
 
     return total, time_taken
 
 
+def choose_tariff(start_location, end_location, departure_datetime, passenger_num):
+    """
+    Chooses the appropriate tariff for the departure time and returns total price and journey time.
+    :param start_location:
+    :type: str
+    :param end_location:
+    :type: str
+    :param departure_datetime:
+    :type: datetime
+    :param passenger_num:
+    :type: int
+    :return: The total cost of the journey and the estimated journey time.
+    :rtype: (float, int)
+    """
+    def tariff_1(sl, el, dep_dt, pass_num):
+        return price_calculation(sl, el, dep_dt, pass_num,
+        3.5, 228.6, 155.88, 0.2, 40, 0.3, 1, 4)
+
+    def tariff_2(sl, el, dep_dt, pass_num):
+        return price_calculation(sl, el, dep_dt, pass_num,
+        3.5, 228.6, 137.16, 0.2, 35, 0.3, 1, 4)
+
+    def tariff_3(sl, el, dep_dt, pass_num):
+        return price_calculation(sl, el, dep_dt, pass_num,
+        3.5, 228.6, 118.87, 0.2, 30, 0.3, 1, 4)
+
+    weekday = departure_datetime.weekday()
+    start_time = departure_datetime.time()
+    bank_holidays = BankHolidays()  # Uses UK Government Bank Holiday API library to get list of all bank holidays in the next few years.
+    bank_holiday_date_list = []
+    for bank_holiday in bank_holidays.get_holidays():
+        bank_holiday_date_list.append(bank_holiday['date'])
+
+    if departure_datetime.date() in bank_holiday_date_list:  # If it is a bank holiday:
+        print("Tariff 3")
+        total_price, journey_time = tariff_3(start_location, end_location, departure_datetime, passenger_num)
+    elif 0 <= weekday < 5 and time(5) < start_time < time(20):  # If it is between 5am and 8pm on a weekday:
+        print("Tariff 1")
+        total_price, journey_time = tariff_1(start_location, end_location, departure_datetime, passenger_num)
+    elif (0 <= weekday < 5 and time(20) < start_time < time(22)) or (weekday >= 5 and time(5) < start_time < time(20)):  # If it is between 5am and 8pm on a weekend or 8am and 10pm on a weekday.
+        print("Tariff 2")
+        total_price, journey_time = tariff_2(start_location, end_location, departure_datetime, passenger_num)
+    else:  # All else (between 10pm and 5am on a weekday. Between 8pm and 5am on a weekend.)
+        total_price, journey_time = tariff_3(start_location, end_location, departure_datetime, passenger_num)
+
+    return total_price, journey_time
+
 def main():
-    start_location, end_location, departure_datetime, passenger_num, large_items_num = get_user_inputs()
-    total_price, journey_time = price_calculation(start_location, end_location, departure_datetime, passenger_num,
-                                                  large_items_num, 3.5, 228.6, 155.88, 0.2, 40, 0.3, 1, 4, 1, 0.5)
+    start_location, end_location, departure_datetime, passenger_num = get_user_inputs()
+
+    total_price, journey_time = choose_tariff(start_location, end_location, departure_datetime, passenger_num)
 
     print("\nYour journey should take ", int(journey_time / 60), " Minutes.")
     print("Your total fare should be: £", total_price)
-    #print("Warning! Fares may be higher in times of unusually heavy traffic. A £50 levy may be charged for fouling of the vehicle.")
-    #print("Fares accurate: November 2020")
 
 if __name__ == '__main__':
     main()
