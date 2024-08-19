@@ -173,8 +173,8 @@ def main():
 
     print("\nYour journey should take ", int(journey_time / 60), " Minutes.")
     print("Your total fare should be: £", total_price)
-    print("Warning! Fares may be higher on and around christmas and new year. A £50 levy may be charged for fouling of the vehicle.")
-    print("Fares accurate: November 2020")
+    #print("Warning! Fares may be higher in times of unusually heavy traffic. A £50 levy may be charged for fouling of the vehicle.")
+    #print("Fares accurate: November 2020")
 
 if __name__ == '__main__':
     main()
