@@ -1,4 +1,6 @@
 ## About
+### Tariffs accurate as of 19/08/2024
+
 A tool which estimates the final fare of a taxi journey within the Cardiff area. 
 Using the date and time, the appropriate tariff is determined from those provided by cardiff council found [here](https://www.cardiff.gov.uk/ENG/resident/Parking-roads-and-travel/travel/taxis/taxi-passengers/hackney-carriage/Pages/default.aspx)
 The start location and destination are used to find the distance and sections of the journey with an average speed of under 8mph (considered stopped for fare purposes) using the google API.
